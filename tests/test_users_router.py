@@ -80,17 +80,11 @@ def test_update_user_should_return_200(client, user, token):
     }
 
 
-def test_update_integrity_error_user_should_return_409(client, user, token):
-    client.post(
-        '/users/',
-        json={
-            'username': 'johndoe',
-            'email': 'johndoe@test.com',
-            'password': 'securepassword',
-        },
-    )
+def test_update_integrity_error_user_should_return_409(
+    client, user, other_user, token
+):
     input = {
-        'username': 'johndoe',
+        'username': other_user.username,
         'email': 'user@test.com',
     }
     response = client.put(

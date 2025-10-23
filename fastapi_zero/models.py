@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
 table_registry = registry()
@@ -19,4 +19,8 @@ class User:
     )
     updated_at: Mapped[datetime] = mapped_column(
         init=False, server_default=func.now(), onupdate=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=text('CURRENT_TIMESTAMP'),
+        onupdate=func.now()
     )
