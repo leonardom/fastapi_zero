@@ -3,7 +3,7 @@ from http import HTTPStatus
 
 def test_login_should_return_200(client, user):
     input = {
-        'username': 'testuser',
+        'username': user.username,
         'password': 'securepassword',
     }
     response = client.post(

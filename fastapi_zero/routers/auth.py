@@ -22,7 +22,9 @@ async def login(
     session: T_Session,
 ):
     user = await session.scalar(
-        select(User).where(User.username == input.username)
+        select(User).where(
+            (User.email == input.username) | (User.username == input.username)
+        )
     )
 
     if not user or not verify_password(input.password, user.password_hash):

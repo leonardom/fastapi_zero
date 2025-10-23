@@ -21,7 +21,7 @@ def test_create_user_should_return_201(client):
 
 def test_create_user_username_conflict_should_return_409(client, user):
     input = {
-        'username': 'testuser',
+        'username': user.username,
         'email': 'newuser@test.com',
         'password': 'securepassword',
     }
@@ -33,7 +33,7 @@ def test_create_user_username_conflict_should_return_409(client, user):
 def test_create_user_email_conflict_should_return_409(client, user):
     input = {
         'username': 'newtestuser',
-        'email': 'user@test.com',
+        'email': user.email,
         'password': 'securepassword',
     }
     response = client.post('/users/', json=input)
@@ -94,7 +94,7 @@ def test_update_integrity_error_user_should_return_409(client, user, token):
         'email': 'user@test.com',
     }
     response = client.put(
-        '/users/1',
+        f'/users/{user.id}',
         json=input,
         headers={'Authorization': f'Bearer {token}'},
     )
@@ -102,13 +102,13 @@ def test_update_integrity_error_user_should_return_409(client, user, token):
     assert response.json() == {'detail': 'Username or email already exists'}
 
 
-def test_update_user_different_user_id_should_return_403(client, user, token):
+def test_update_user_wrong_user_should_return_403(client, other_user, token):
     input = {
         'username': 'johndoe',
         'email': 'user@test.com',
     }
     response = client.put(
-        '/users/99',
+        f'/users/{other_user.id}',
         json=input,
         headers={'Authorization': f'Bearer {token}'},
     )
@@ -142,9 +142,9 @@ def test_delete_user_does_not_exist_should_return_401(client, user):
     assert response.json() == {'detail': 'Could not validate credentials'}
 
 
-def test_delete_user_different_user_id_should_return_403(client, user, token):
+def test_delete_user_wrong_user_should_return_403(client, other_user, token):
     response = client.delete(
-        '/users/99', headers={'Authorization': f'Bearer {token}'}
+        f'/users/{other_user.id}', headers={'Authorization': f'Bearer {token}'}
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {'detail': 'Not authorized to delete this user'}

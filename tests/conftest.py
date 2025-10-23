@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from datetime import datetime
 
+import factory
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -41,7 +42,7 @@ async def session():
     async with engine.begin() as conn:
         await conn.run_sync(table_registry.metadata.create_all)
 
-    async with AsyncSession(engine) as session:
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
     async with engine.begin() as conn:
@@ -70,11 +71,33 @@ def mock_db_time():
 
 
 @pytest_asyncio.fixture
-async def user(session: AsyncSession):
+async def user(session):
     """Fixture to create user in the database."""
-    user = User(
-        username='testuser',
-        email='user@test.com',
+    return await create_user(session)
+
+
+@pytest_asyncio.fixture
+async def other_user(session):
+    """Fixture to create other user in the database."""
+    return await create_user(session)
+
+
+@pytest.fixture
+def token(client, user):
+    response = client.post(
+        '/auth/login',
+        data={'username': user.email, 'password': 'securepassword'},
+    )
+    return response.json()['access_token']
+
+
+@pytest.fixture
+def settings():
+    return Settings()
+
+
+async def create_user(session):
+    user = UserFactory(
         password_hash=get_password_hash('securepassword'),
     )
     session.add(user)
@@ -84,19 +107,9 @@ async def user(session: AsyncSession):
     return user
 
 
-@pytest.fixture
-def token(client, user):
-    """Fixture to provide a valid JWT token for authentication."""
-    response = client.post(
-        '/auth/login',
-        data={
-            'username': user.username,
-            'password': 'securepassword',
-        },
-    )
-    return response.json()['access_token']
+class UserFactory(factory.Factory):
+    class Meta:
+        model = User
 
-
-@pytest.fixture
-def settings():
-    return Settings()
+    username = factory.Sequence(lambda n: f'user{n}')
+    email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')
