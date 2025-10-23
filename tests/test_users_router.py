@@ -94,7 +94,7 @@ def test_update_integrity_error_user_should_return_409(client, user, token):
         'email': 'user@test.com',
     }
     response = client.put(
-        f'/users/{user.id}',
+        '/users/1',
         json=input,
         headers={'Authorization': f'Bearer {token}'},
     )

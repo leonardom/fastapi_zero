@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from fastapi_zero.database import get_session
 from fastapi_zero.models import User
@@ -18,7 +18,7 @@ from fastapi_zero.schemas import (
 from fastapi_zero.security import get_current_user, get_password_hash
 
 router = APIRouter(prefix='/users', tags=['users'])
-T_Session = Annotated[Session, Depends(get_session)]
+T_Session = Annotated[AsyncSession, Depends(get_session)]
 T_CurrentUser = Annotated[User, Depends(get_current_user)]
 T_Pagination = Annotated[Pagination, Query()]
 
@@ -28,8 +28,8 @@ T_Pagination = Annotated[Pagination, Query()]
     status_code=HTTPStatus.CREATED,
     response_model=UserResponse,
 )
-def create(input: CreateUserRequest, session: T_Session):
-    user = session.scalar(
+async def create(input: CreateUserRequest, session: T_Session):
+    user = await session.scalar(
         select(User).where(
             (User.email == input.email) | (User.username == input.username)
         )
@@ -52,8 +52,9 @@ def create(input: CreateUserRequest, session: T_Session):
         password_hash=hashed_password,
     )
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
+
     return user
 
 
@@ -62,10 +63,11 @@ def create(input: CreateUserRequest, session: T_Session):
     status_code=HTTPStatus.OK,
     response_model=ListUserResponse,
 )
-def find_all(session: T_Session, pagination: T_Pagination):
-    users = session.scalars(
+async def find_all(session: T_Session, pagination: T_Pagination):
+    query = await session.scalars(
         select(User).offset(pagination.skip).limit(pagination.limit)
-    ).all()
+    )
+    users = query.all()
     return {'users': users}
 
 
@@ -74,8 +76,8 @@ def find_all(session: T_Session, pagination: T_Pagination):
     status_code=HTTPStatus.OK,
     response_model=UserResponse,
 )
-def find(user_id: int, session: T_Session):
-    user = session.scalar(select(User).where(User.id == user_id))
+async def find(user_id: int, session: T_Session):
+    user = await session.scalar(select(User).where(User.id == user_id))
     if not user:
         raise HTTPException(status_code=404, detail='User not found')
 
@@ -87,7 +89,7 @@ def find(user_id: int, session: T_Session):
     status_code=HTTPStatus.OK,
     response_model=UserResponse,
 )
-def update(
+async def update(
     user_id: int,
     input: UpdateUserRequest,
     session: T_Session,
@@ -102,11 +104,14 @@ def update(
     try:
         current_user.username = input.username
         current_user.email = input.email
+
         if input.password:
             hashed_password = get_password_hash(input.password)
             current_user.password_hash = hashed_password
-        session.commit()
-        session.refresh(current_user)
+
+        await session.commit()
+        await session.refresh(current_user)
+
         return current_user
     except IntegrityError:
         raise HTTPException(
@@ -116,7 +121,7 @@ def update(
 
 
 @router.delete('/{user_id}', status_code=HTTPStatus.NO_CONTENT)
-def delete(
+async def delete(
     user_id: int,
     session: T_Session,
     current_user: T_CurrentUser,
@@ -127,5 +132,5 @@ def delete(
             detail='Not authorized to delete this user',
         )
 
-    session.delete(current_user)
-    session.commit()
+    await session.delete(current_user)
+    await session.commit()
