@@ -1,10 +1,11 @@
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
-class MessageResponse(BaseModel):
-    message: str
+class Pagination(BaseModel):
+    skip: int = Field(ge=0, default=0)
+    limit: int = Field(gt=0, default=10)
 
 
 class CreateUserRequest(BaseModel):

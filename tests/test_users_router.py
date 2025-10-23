@@ -4,12 +4,6 @@ from fastapi_zero.schemas import UserResponse
 from fastapi_zero.security import create_access_token
 
 
-def test_hello_should_return_200(client):
-    response = client.get('/')
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {'message': 'Hello, World!'}
-
-
 def test_create_user_should_return_201(client):
     input = {
         'username': 'testuser',
@@ -154,31 +148,3 @@ def test_delete_user_different_user_id_should_return_403(client, user, token):
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
     assert response.json() == {'detail': 'Not authorized to delete this user'}
-
-
-def test_login_should_return_200(client, user):
-    input = {
-        'username': 'testuser',
-        'password': 'securepassword',
-    }
-    response = client.post(
-        '/login',
-        data=input,
-    )
-    token = response.json()
-    assert response.status_code == HTTPStatus.OK
-    assert 'access_token' in token
-    assert token['token_type'] == 'bearer'
-
-
-def test_login_invalid_credentials_should_return_401(client, user):
-    input = {
-        'username': 'testuser',
-        'password': 'wrongpassword',
-    }
-    response = client.post(
-        '/login',
-        data=input,
-    )
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-    assert response.json() == {'detail': 'Invalid username or password'}
