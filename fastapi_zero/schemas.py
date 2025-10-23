@@ -28,3 +28,8 @@ class UpdateUserRequest(BaseModel):
     username: str
     email: EmailStr
     password: Optional[str] = None
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
