@@ -1,9 +1,10 @@
 from datetime import datetime
 
 from sqlalchemy import func, text
-from sqlalchemy.orm import Mapped, mapped_column, registry
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-table_registry = registry()
+from .base import table_registry
+from .todo import Todo
 
 
 @table_registry.mapped_as_dataclass
@@ -18,9 +19,11 @@ class User:
         init=False, server_default=func.now()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        init=False, server_default=func.now(), onupdate=func.now()
+        init=False,
+        server_default=text('CURRENT_TIMESTAMP'),
+        onupdate=func.now(),
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        init=False, server_default=text('CURRENT_TIMESTAMP'),
-        onupdate=func.now()
+
+    todos: Mapped[list['Todo']] = relationship(
+        init=False, cascade='all, delete-orphan', lazy='selectin'
     )
