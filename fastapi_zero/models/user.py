@@ -3,12 +3,12 @@ from datetime import datetime
 from sqlalchemy import func, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import table_registry
+from .base import ModelBase, table_registry
 from .todo import Todo
 
 
 @table_registry.mapped_as_dataclass
-class User:
+class User(ModelBase):
     __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)

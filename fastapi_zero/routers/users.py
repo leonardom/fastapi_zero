@@ -102,13 +102,7 @@ async def update(
         )
 
     try:
-        current_user.username = input.username
-        current_user.email = input.email
-
-        if input.password:
-            hashed_password = get_password_hash(input.password)
-            current_user.password_hash = hashed_password
-
+        current_user.update_fields(input)
         await session.commit()
         await session.refresh(current_user)
 

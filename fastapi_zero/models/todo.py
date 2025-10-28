@@ -4,7 +4,7 @@ from enum import Enum
 from sqlalchemy import ForeignKey, func, text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .base import table_registry
+from .base import ModelBase, table_registry
 
 
 class TodoState(str, Enum):
@@ -16,7 +16,7 @@ class TodoState(str, Enum):
 
 
 @table_registry.mapped_as_dataclass
-class Todo:
+class Todo(ModelBase):
     __tablename__ = 'todos'
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)

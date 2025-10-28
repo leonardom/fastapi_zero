@@ -104,9 +104,7 @@ async def update(
             detail='Not authorized to update this todo',
         )
 
-    for field, value in input.model_dump(exclude_unset=True).items():
-        setattr(todo, field, value)
-
+    todo.update_fields(input)
     session.add(todo)
     await session.commit()
     await session.refresh(todo)
