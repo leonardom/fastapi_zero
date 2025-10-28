@@ -1,0 +1,25 @@
+services:
+  fastapi_zero_db:
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: devdbuser
+      POSTGRES_PASSWORD: devdbpwd
+      POSTGRES_DB: devdb
+    ports:
+      - "5432:5432"
+
+  fastapi_zero_app:
+    image: fastapi_zero_app
+    entrypoint: ./entrypoint.sh
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - fastapi_zero_db
+    environment:
+      DATABASE_URL: postgresql+psycopg://devdbuser:devdbpwd@fastapi_zero_db:5432/devdb
+
+volumes:
+  pgdata:
