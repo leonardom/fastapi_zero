@@ -1,0 +1,29 @@
+name: Pipeline
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      JWT_ALGORITHM: ${{ secrets.JWT_ALGORITHM }}
+      JWT_EXPIRE_IN_MINUTES: ${{ secrets.JWT_EXPIRE_IN_MINUTES }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Installing python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Installing poetry
+        run: pipx install poetry
+
+      - name: Installing dependencies
+        run: poetry install
+
+      - name: Executing tests
+        run: poetry run task test
